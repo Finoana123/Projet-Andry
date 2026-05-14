@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de Bord - Administration</title>
+  <style>
+    /* Tu pourras reprendre ici le style que nous avions créé */
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+  </style>
+</head>
+<body>
+  <h1>Bienvenue sur le Tableau de Bord</h1>
+  <p>Si tu vois ce message, c'est que tu es bien connecté.</p>
+  <!-- C'est ici que nous ajouterons plus tard tes 4 boutons -->
+
+  <script>
+    // Vérification immédiate de l'authentification
+    async function checkAuth() {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        // Pas de jeton trouvé, redirection vers la connexion
+        window.location.href = '/index.html';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/check-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          // Le jeton est invalide, on le supprime et on redirige
+          localStorage.removeItem('adminToken');
+          window.location.href = '/index.html';
+        }
+      } catch (error) {
+        window.location.href = '/index.html';
+      }
+    }
+
+    // On lance la vérification dès que la page est chargée
+    checkAuth();
+  </script>
+</body>
+</html>

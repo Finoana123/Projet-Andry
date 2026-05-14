@@ -1,4 +1,7 @@
 {
   "name": "ecole-gestion",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
 }

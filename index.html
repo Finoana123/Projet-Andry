@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administration - École</title>
+  <title>Administration - Gestion École</title>
   <style>
     * {
       margin: 0;
@@ -13,38 +13,38 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
       background-size: 400% 400%;
-      animation: gradientBg 15s ease infinite;
+      animation: gradientBG 15s ease infinite;
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px;
+      padding: 16px;
     }
 
-    @keyframes gradientBg {
+    @keyframes gradientBG {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
 
-    .login-container {
+    .login-card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      border-radius: 20px;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-      padding: 40px 30px;
+      border-radius: 24px;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3);
+      padding: 48px 32px;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       text-align: center;
-      animation: fadeInUp 0.8s ease;
+      animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     @keyframes fadeInUp {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(40px);
       }
       to {
         opacity: 1;
@@ -52,86 +52,82 @@
       }
     }
 
-    .login-icon {
-      width: 70px;
-      height: 70px;
+    .icon-container {
+      width: 80px;
+      height: 80px;
       background: linear-gradient(135deg, #667eea, #764ba2);
       border-radius: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 0 auto 20px;
-      font-size: 30px;
+      margin: 0 auto 24px;
+      font-size: 36px;
       color: white;
-      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
     }
 
-    .login-container h2 {
-      color: #333;
-      margin-bottom: 10px;
-      font-weight: 600;
-      font-size: 1.8rem;
+    .login-card h1 {
+      color: #1a202c;
+      margin-bottom: 8px;
+      font-weight: 700;
+      font-size: 2rem;
     }
 
-    .login-container p {
-      color: #777;
-      margin-bottom: 25px;
-      font-size: 0.95rem;
+    .login-card p {
+      color: #718096;
+      margin-bottom: 32px;
+      font-size: 1rem;
     }
 
     .input-group {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       text-align: left;
     }
 
     .input-group label {
       display: block;
-      margin-bottom: 6px;
-      color: #555;
-      font-weight: 500;
+      margin-bottom: 8px;
+      color: #4a5568;
+      font-weight: 600;
       font-size: 0.9rem;
+      letter-spacing: 0.3px;
     }
 
     .input-group input {
       width: 100%;
-      padding: 14px 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
+      padding: 16px 18px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
       font-size: 1rem;
       transition: all 0.3s ease;
       outline: none;
-      background: #f9f9f9;
+      background: #f7fafc;
     }
 
     .input-group input:focus {
       border-color: #667eea;
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-      background: #fff;
-    }
-
-    .input-group input:read-only {
-      background: #f0f0f0;
-      cursor: not-allowed;
+      background: #ffffff;
     }
 
     button {
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 1.1rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
       letter-spacing: 0.5px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
     }
 
     button:active {
@@ -139,12 +135,12 @@
     }
 
     .error-message {
-      color: #d32f2f;
-      background: rgba(211, 47, 47, 0.08);
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 15px;
-      font-size: 0.9rem;
+      color: #e53e3e;
+      background: rgba(229, 62, 62, 0.08);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 16px;
+      font-size: 0.95rem;
       display: none;
       animation: shake 0.4s ease;
     }
@@ -156,36 +152,45 @@
       75% { transform: translateX(-5px); }
     }
 
-    /* Responsive ajustements */
+    /* Adaptations pour très petits écrans */
     @media (max-width: 480px) {
-      .login-container {
-        padding: 30px 20px;
+      .login-card {
+        padding: 36px 24px;
       }
-      .login-icon {
-        width: 60px;
-        height: 60px;
-        font-size: 26px;
+      .icon-container {
+        width: 64px;
+        height: 64px;
+        font-size: 28px;
       }
-      .login-container h2 {
-        font-size: 1.5rem;
+      .login-card h1 {
+        font-size: 1.8rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .input-group input {
+        padding: 14px 14px;
+      }
+      button {
+        padding: 14px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="login-icon">🔐</div>
-    <h2>Espace Administration</h2>
-    <p>Connectez-vous pour gérer l'école</p>
+  <div class="login-card">
+    <div class="icon-container">🔐</div>
+    <h1>Espace Admin</h1>
+    <p>Gestion des élèves et écolages</p>
 
     <form id="loginForm">
       <div class="input-group">
         <label for="username">Nom d'utilisateur</label>
-        <input type="text" id="username" value="Andrana" readonly>
+        <input type="text" id="username" placeholder="Entrez l'identifiant" required autocomplete="username">
       </div>
       <div class="input-group">
         <label for="password">Mot de passe</label>
-        <input type="password" id="password" placeholder="Entrez votre mot de passe" required autocomplete="current-password">
+        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
       </div>
       <button type="submit">Connexion</button>
       <div class="error-message" id="errorMsg"></div>
@@ -195,15 +200,14 @@
   <script>
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
       const errorDiv = document.getElementById('errorMsg');
       errorDiv.style.display = 'none';
       errorDiv.textContent = '';
 
-      // Petite vérification côté client pour éviter les espaces invisibles
-      if (password.length === 0) {
-        errorDiv.textContent = 'Veuillez entrer un mot de passe.';
+      if (!username || !password) {
+        errorDiv.textContent = 'Veuillez remplir tous les champs.';
         errorDiv.style.display = 'block';
         return;
       }
@@ -212,13 +216,12 @@
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username.trim(), password: password.trim() })
+          body: JSON.stringify({ username, password })
         });
 
         const data = await res.json();
 
         if (res.ok && data.success) {
-          // Stocker un indicateur de connexion (simple, car pas de JWT pour l'instant)
           localStorage.setItem('isLoggedIn', 'true');
           window.location.href = '/dashboard.html';
         } else {

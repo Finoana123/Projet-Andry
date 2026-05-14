@@ -221,9 +221,12 @@
 
         const data = await res.json();
 
-        if (res.ok && data.success) {
-          localStorage.setItem('isLoggedIn', 'true');
-          window.location.href = '/dashboard.html';
+        
+          if (res.ok && data.success) {
+  // Stocker le Jeton JWT reçu de l'API
+  localStorage.setItem('adminToken', data.token);
+  window.location.href = '/dashboard.html';
+          
         } else {
           errorDiv.textContent = data.message || 'Identifiants incorrects.';
           errorDiv.style.display = 'block';

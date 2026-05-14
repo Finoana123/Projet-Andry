@@ -8,29 +8,38 @@ export default async function handler(req, res) {
 
   const { username, password } = req.body;
 
-  // Vérification du nom d'utilisateur (depuis variable d'env)
+  // Étape 1 : Vérification du username
   const validUsername = process.env.ADMIN_USERNAME;
   if (!username || username !== validUsername) {
-    return res.status(401).json({ success: false, message: 'Identifiants incorrects' });
+    return res.status(401).json({
+      success: false,
+      message: `Échec nom d'utilisateur. Reçu : "${username}", Attendu : "${validUsername}"`
+    });
   }
 
-  // Vérification du mot de passe (haché)
+  // Étape 2 : Vérifier que le hash est défini
   const passwordHash = process.env.ADMIN_PASSWORD_HASH;
   if (!passwordHash) {
-    return res.status(500).json({ success: false, message: 'Configuration serveur manquante' });
+    return res.status(500).json({
+      success: false,
+      message: 'Variable ADMIN_PASSWORD_HASH non définie sur Vercel'
+    });
   }
 
+  // Étape 3 : Comparaison bcrypt
   const match = await bcrypt.compare(password, passwordHash);
   if (!match) {
-    return res.status(401).json({ success: false, message: 'Identifiants incorrects' });
+    return res.status(401).json({
+      success: false,
+      message: 'Mot de passe incorrect (la comparaison bcrypt a échoué)'
+    });
   }
 
-  // Génération du token JWT
+  // Succès
   const token = jwt.sign(
     { username, role: 'admin' },
     process.env.JWT_SECRET,
     { expiresIn: '8h' }
   );
-
   return res.status(200).json({ success: true, token });
 }

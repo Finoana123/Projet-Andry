@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Élèves - Administration</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      margin-top: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .header h1 { font-size: 1.6rem; color: #1a202c; }
+    .back-btn {
+      background: #718096;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .back-btn:hover { background: #4a5568; }
+    .section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #f7fafc; font-weight: 600; }
+    .clickable-row { cursor: pointer; }
+    .clickable-row:hover { background: #f0f4ff; }
+    button.primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 20px;
+    }
+    button.primary:hover { background: linear-gradient(135deg, #5a6fd1, #6b47a8); }
+    .message { margin-top: 12px; padding: 10px; border-radius: 8px; }
+    .success { background: #c6f6d5; color: #22543d; }
+    .error { background: #fed7d7; color: #742a2a; }
+    .info { background: #dbeafe; color: #1e3a8a; }
+
+    /* Modales */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      animation: fadeInUp 0.3s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .close-modal {
+      position: absolute;
+      top: 12px; right: 18px;
+      font-size: 28px;
+      cursor: pointer;
+      color: #999;
+      transition: color 0.2s;
+    }
+    .close-modal:hover { color: #333; }
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #4a5568; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    .modal-actions { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+    #qrCodeContainer { text-align: center; margin-top: 20px; }
+    #qrCodeContainer img { max-width: 200px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Liste des élèves</h1>
+      <button class="back-btn" id="backToDashboard">⬅ Retour au tableau de bord</button>
+    </div>
+
+    <div class="section">
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th>Matricule</th>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Niveau</th>
+            <th>Date enregistrement</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div style="text-align: right;">
+        <button class="primary" id="openAddStudentModalBtn">➕ Ajouter un élève</button>
+      </div>
+      <div id="studentsMsg" class="message" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Modale Ajout élève -->
+  <div id="studentModal" class="modal-overlay">
+    <div class="modal-content">
+      <span class="close-modal" id="closeAddModal">&times;</span>
+      <h2>Nouvel élève</h2>
+      <form id="addStudentForm">
+        <div class="form-group">
+          <label for="firstName">Prénom</label>
+          <input type="text" id="firstName" required>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Nom</label>
+          <input type="text" id="lastName" required>
+        </div>
+        <div class="form-group">
+          <label for="matricule">Matricule</label>
+          <input type="text" id="matricule" required>
+        </div>
+        <div class="form-group">
+          <label for="niveau">Niveau</label>
+          <select id="niveau" required>
+            <option value="">-- Choisir --</option>
+            <option value="6ème">6ème</option>
+            <option value="5ème">5ème</option>
+            <option value="4ème">4ème</option>
+            <option value="3ème">3ème</option>
+            <option value="2nde">2nde</option>
+            <option value="1ère">1ère</option>
+            <option value="Terminale">Terminale</option>
+          </select>
+        </div>
+        <button type="submit" class="primary" style="width:100%">Enregistrer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale Détail élève (historique + QR) -->
+  <div id="studentDetailModal" class="modal-overlay">
+    <div class="modal-content">
+      <span class="close-modal" id="closeDetailModal">&times;</span>
+      <h2 id="detailStudentName"></h2>
+      <div class="modal-actions">
+        <button id="showHistoryBtn" class="primary">📋 Historique écolages</button>
+        <button id="generateQRBtn" class="primary">📱 Créer QR Code</button>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // Vérification du token JWT
+    const token = localStorage.getItem('adminToken');
+    if (!token) window.location.href = '/index.html';
+
+    // Fonction générique d'appel API sécurisé
+    async function apiCall(url, method = 'GET', body = null) {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('adminToken');
+          window.location.href = '/index.html';
+        }
+        throw new Error(data.message || 'Erreur');
+      }
+      return data;
+    }
+
+    // Retour au dashboard
+    document.getElementById('backToDashboard').addEventListener('click', () => {
+      window.location.href = '/dashboard.html';
+    });
+
+    // Chargement initial des élèves
+    loadStudents();
+
+    async function loadStudents() {
+      const tbody = document.querySelector('#studentsTable tbody');
+      const msgDiv = document.getElementById('studentsMsg');
+      try {
+        const students = await apiCall('/api/students');
+        tbody.innerHTML = '';
+        if (students.length === 0) {
+          msgDiv.style.display = 'block';
+          msgDiv.className = 'message info';
+          msgDiv.textContent = 'Aucun élève enregistré.';
+        } else {
+          msgDiv.style.display = 'none';
+          students.forEach(s => {
+            const row = tbody.insertRow();
+            row.classList.add('clickable-row');
+            const date = s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '-';
+            row.innerHTML = `
+              <td>${s.matricule}</td>
+              <td>${s.last_name}</td>
+              <td>${s.first_name}</td>
+              <td>${s.niveau || '-'}</td>
+              <td>${date}</td>
+            `;
+            row.addEventListener('click', () => openStudentDetail(s));
+          });
+        }
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
+      }
+    }
+
+    // --- Modale Ajout élève ---
+    const addModal = document.getElementById('studentModal');
+    const openAddBtn = document.getElementById('openAddStudentModalBtn');
+    const closeAddBtn = document.getElementById('closeAddModal');
+
+    openAddBtn.addEventListener('click', () => {
+      addModal.classList.add('active');
+    });
+    closeAddBtn.addEventListener('click', () => addModal.classList.remove('active'));
+    window.addEventListener('click', (e) => {
+      if (e.target === addModal) addModal.classList.remove('active');
+    });
+
+    document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const first_name = document.getElementById('firstName').value.trim();
+      const last_name = document.getElementById('lastName').value.trim();
+      const matricule = document.getElementById('matricule').value.trim();
+      const niveau = document.getElementById('niveau').value;
+      const msgDiv = document.getElementById('studentsMsg');
+
+      if (!first_name || !last_name || !matricule || !niveau) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = 'Tous les champs sont obligatoires.';
+        return;
+      }
+
+      try {
+        await apiCall('/api/students', 'POST', { first_name, last_name, matricule, niveau });
+        document.getElementById('addStudentForm').reset();
+        addModal.classList.remove('active');
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message success';
+        msgDiv.textContent = 'Élève ajouté avec succès !';
+        await loadStudents();
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
+      }
+    });
+
+    // --- Modale Détail élève ---
+    const detailModal = document.getElementById('studentDetailModal');
+    const closeDetailBtn = document.getElementById('closeDetailModal');
+    let currentStudent = null;
+
+    function openStudentDetail(student) {
+      currentStudent = student;
+      document.getElementById('detailStudentName').textContent = 
+        `${student.first_name} ${student.last_name} (${student.matricule})`;
+      document.getElementById('detailContent').innerHTML = '';
+      detailModal.classList.add('active');
+    }
+
+    closeDetailBtn.addEventListener('click', () => detailModal.classList.remove('active'));
+    window.addEventListener('click', (e) => {
+      if (e.target === detailModal) detailModal.classList.remove('active');
+    });
+
+    document.getElementById('showHistoryBtn').addEventListener('click', async () => {
+      if (!currentStudent) return;
+      const contentDiv = document.getElementById('detailContent');
+      contentDiv.innerHTML = '<p>Chargement...</p>';
+      try {
+        const history = await apiCall(`/api/student-payments?student_id=${currentStudent.id}`);
+        if (history.length === 0) {
+          contentDiv.innerHTML = '<p>Aucun paiement enregistré.</p>';
+          return;
+        }
+        let html = '<table><thead><tr><th>Mois</th><th>Montant</th><th>Payé le</th></tr></thead><tbody>';
+        history.forEach(p => {
+          html += `<tr>
+            <td>${p.month}</td>
+            <td>${p.amount || '-'} Ar</td>
+            <td>${p.payment_date ? new Date(p.payment_date).toLocaleDateString('fr-FR') : '-'}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        contentDiv.innerHTML = html;
+      } catch (err) {
+        contentDiv.innerHTML = `<p class="error">Erreur : ${err.message}</p>`;
+      }
+    });
+
+    document.getElementById('generateQRBtn').addEventListener('click', () => {
+      if (!currentStudent) return;
+      const contentDiv = document.getElementById('detailContent');
+      const qrData = JSON.stringify({
+        matricule: currentStudent.matricule,
+        nom: currentStudent.last_name,
+        prenom: currentStudent.first_name,
+        niveau: currentStudent.niveau
+      });
+      const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+      contentDiv.innerHTML = `
+        <div id="qrCodeContainer">
+          <img src="${qrURL}" alt="QR Code">
+          <p>Scannez pour voir l'identité de l'élève</p>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>

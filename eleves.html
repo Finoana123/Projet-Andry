@@ -177,6 +177,8 @@
     const token = localStorage.getItem('adminToken');
     if (!token) window.location.href = '/index.html';
 
+    let currentQRURL = null;
+
     async function apiCall(url, method = 'GET', body = null) {
       const res = await fetch(url, {
         method,
@@ -308,6 +310,7 @@
         niveau: currentStudent.niveau
       });
       const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+      currentQRURL = qrURL;
       content.innerHTML = `
         <div class="qr-container">
           <img src="${qrURL}" alt="QR Code élève">
@@ -317,9 +320,10 @@
       `;
     });
 
-    // Fonction d'impression (export Word)
+    // Fonction d'impression (export avec QR)
     window.printStudentInfo = function() {
       if (!currentStudent) return;
+      const qrImage = currentQRURL ? `<img src="${currentQRURL}" style="max-width:200px; margin:20px 0;" />` : '';
       const printWindow = window.open('', '_blank');
       printWindow.document.write(`
         <html>
@@ -341,6 +345,8 @@
               <p><strong>Prénom :</strong> ${currentStudent.first_name}</p>
               <p><strong>Niveau :</strong> ${currentStudent.niveau || '-'}</p>
             </div>
+            ${qrImage}
+            <p style="margin-top:16px;"><em>Scannez le QR code pour vérifier l'identité.</em></p>
             <p><em>Document généré depuis l'application école.</em></p>
           </body>
         </html>

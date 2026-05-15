@@ -24,7 +24,7 @@
     }
     .dashboard-container {
       width: 100%;
-      max-width: 900px;
+      max-width: 1000px;
       margin-top: 20px;
     }
     .header {
@@ -99,7 +99,7 @@
       border-radius: 10px;
       font-size: 1rem;
     }
-    button[type="submit"], .payBtn, .saveStatusBtn, #loadUnpaidBtn, #absWeekBtn, #absMonthBtn, #openAddStudentModalBtn {
+    button[type="submit"], .payBtn, .saveStatusBtn, #loadUnpaidBtn, #absWeekBtn, #absMonthBtn, #openAddStudentModalBtn, .btn-secondary {
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
       border: none;
@@ -110,7 +110,7 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-    button[type="submit"]:hover, .payBtn:hover, .saveStatusBtn:hover, #openAddStudentModalBtn:hover {
+    button[type="submit"]:hover, .payBtn:hover, .saveStatusBtn:hover, #openAddStudentModalBtn:hover, .btn-secondary:hover {
       background: linear-gradient(135deg, #5a6fd1, #6b47a8);
     }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -119,8 +119,10 @@
     .message { margin-top: 12px; padding: 10px; border-radius: 8px; }
     .success { background: #c6f6d5; color: #22543d; }
     .error { background: #fed7d7; color: #742a2a; }
+    .info { background: #dbeafe; color: #1e3a8a; }
     select.statusSelect { padding: 6px; margin-right: 6px; }
-    /* Modale */
+
+    /* Modale générique */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -137,10 +139,12 @@
       border-radius: 16px;
       padding: 32px;
       width: 90%;
-      max-width: 450px;
+      max-width: 500px;
       position: relative;
       animation: fadeInUp 0.3s ease;
       box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      max-height: 90vh;
+      overflow-y: auto;
     }
     .close-modal {
       position: absolute;
@@ -151,6 +155,19 @@
       transition: color 0.2s;
     }
     .close-modal:hover { color: #333; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    #qrCodeContainer {
+      text-align: center;
+      margin-top: 20px;
+    }
+    #qrCodeContainer img { max-width: 200px; }
+    .clickable-row { cursor: pointer; }
+    .clickable-row:hover { background: #f0f4ff; }
   </style>
 </head>
 <body>
@@ -186,7 +203,6 @@
     <!-- Section Élèves -->
     <div id="students" class="section">
       <h2>Liste des élèves</h2>
-      <button id="openAddStudentModalBtn" style="margin-bottom:16px;">➕ Ajouter un élève</button>
       <table id="studentsTable">
         <thead>
           <tr>
@@ -194,11 +210,14 @@
             <th>Nom</th>
             <th>Prénom</th>
             <th>Niveau</th>
-            <th>Date d'enregistrement</th>
+            <th>Date enregistrement</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
+      <div style="text-align: right; margin-top: 20px;">
+        <button id="openAddStudentModalBtn">➕ Ajouter un élève</button>
+      </div>
       <div id="studentsMsg" class="message" style="display:none;"></div>
     </div>
 
@@ -264,7 +283,7 @@
     </div>
   </div>
 
-  <!-- Modale d'ajout d'élève -->
+  <!-- Modale Ajout élève -->
   <div id="studentModal" class="modal-overlay">
     <div class="modal-content">
       <span class="close-modal">&times;</span>
@@ -297,6 +316,19 @@
         </div>
         <button type="submit">Enregistrer</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Modale Détail élève (historique + QR) -->
+  <div id="studentDetailModal" class="modal-overlay">
+    <div class="modal-content">
+      <span class="close-modal" onclick="document.getElementById('studentDetailModal').classList.remove('active')">&times;</span>
+      <h2 id="detailStudentName"></h2>
+      <div class="modal-actions">
+        <button id="showHistoryBtn" class="btn-secondary">📋 Historique écolages</button>
+        <button id="generateQRBtn" class="btn-secondary">📱 Générer QR Code</button>
+      </div>
+      <div id="detailContent"></div>
     </div>
   </div>
 
@@ -360,6 +392,7 @@
           msgDiv.style.display = 'none';
           students.forEach(s => {
             const row = tbody.insertRow();
+            row.classList.add('clickable-row');
             const date = s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '-';
             row.innerHTML = `
               <td>${s.matricule}</td>
@@ -368,6 +401,8 @@
               <td>${s.niveau || '-'}</td>
               <td>${date}</td>
             `;
+            // Clic sur la ligne → ouvre la modale détail
+            row.addEventListener('click', () => openStudentDetail(s));
           });
         }
       } catch (err) {
@@ -377,16 +412,15 @@
       }
     }
 
-    // Modale
+    // Modale Ajout élève
     const modal = document.getElementById('studentModal');
     const openModalBtn = document.getElementById('openAddStudentModalBtn');
-    const closeModalBtn = document.querySelector('.close-modal');
+    const closeModalBtn = document.querySelector('#studentModal .close-modal');
 
     openModalBtn.addEventListener('click', () => {
       modal.classList.add('active');
       document.getElementById('studentsMsg').style.display = 'none';
     });
-
     closeModalBtn.addEventListener('click', () => modal.classList.remove('active'));
     window.addEventListener('click', (e) => {
       if (e.target === modal) modal.classList.remove('active');
@@ -409,10 +443,8 @@
 
       try {
         await apiCall('/api/students', 'POST', { first_name, last_name, matricule, niveau });
-        // Réinitialiser et fermer la modale
         document.getElementById('addStudentForm').reset();
         modal.classList.remove('active');
-        // Afficher message de succès et recharger la liste
         msgDiv.style.display = 'block';
         msgDiv.className = 'message success';
         msgDiv.textContent = 'Élève ajouté avec succès !';
@@ -421,6 +453,69 @@
         msgDiv.style.display = 'block';
         msgDiv.className = 'message error';
         msgDiv.textContent = err.message;
+      }
+    });
+
+    // ---- Détail élève (modale) ----
+    let currentStudent = null;
+    function openStudentDetail(student) {
+      currentStudent = student;
+      document.getElementById('detailStudentName').textContent = `${student.first_name} ${student.last_name} (${student.matricule})`;
+      document.getElementById('detailContent').innerHTML = '';
+      document.getElementById('studentDetailModal').classList.add('active');
+    }
+
+    document.getElementById('showHistoryBtn').addEventListener('click', async () => {
+      if (!currentStudent) return;
+      const contentDiv = document.getElementById('detailContent');
+      contentDiv.innerHTML = '<p>Chargement...</p>';
+      try {
+        const history = await apiCall(`/api/student-payments?student_id=${currentStudent.id}`);
+        if (history.length === 0) {
+          contentDiv.innerHTML = '<p>Aucun paiement enregistré pour cet élève.</p>';
+          return;
+        }
+        let html = '<table><thead><tr><th>Mois</th><th>Montant</th><th>Payé le</th></tr></thead><tbody>';
+        history.forEach(p => {
+          html += `<tr>
+            <td>${p.month}</td>
+            <td>${p.amount || '-'} Ar</td>
+            <td>${p.payment_date ? new Date(p.payment_date).toLocaleDateString('fr-FR') : '-'}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        contentDiv.innerHTML = html;
+      } catch (err) {
+        contentDiv.innerHTML = `<p class="error">Erreur : ${err.message}</p>`;
+      }
+    });
+
+    document.getElementById('generateQRBtn').addEventListener('click', () => {
+      if (!currentStudent) return;
+      const contentDiv = document.getElementById('detailContent');
+      // Données à encoder : identité de l'élève
+      const qrData = JSON.stringify({
+        matricule: currentStudent.matricule,
+        nom: currentStudent.last_name,
+        prenom: currentStudent.first_name,
+        niveau: currentStudent.niveau
+      });
+      const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+      contentDiv.innerHTML = `
+        <div id="qrCodeContainer">
+          <img src="${qrURL}" alt="QR Code">
+          <p>Scannez pour voir l'identité de l'élève</p>
+        </div>
+      `;
+    });
+
+    // Fermer la modale détail quand on clique sur la croix
+    document.querySelector('#studentDetailModal .close-modal').addEventListener('click', () => {
+      document.getElementById('studentDetailModal').classList.remove('active');
+    });
+    window.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('studentDetailModal')) {
+        document.getElementById('studentDetailModal').classList.remove('active');
       }
     });
 
@@ -453,139 +548,4 @@
               try {
                 const currentMonth = new Date().toISOString().slice(0,7);
                 await apiCall('/api/payments', 'POST', { student_id: studentId, month: currentMonth });
-                loadUnpaid();
-              } catch (err) {
-                alert('Erreur : ' + err.message);
-              }
-            });
-          });
-        }
-      } catch (err) {
-        msgDiv.style.display = 'block';
-        msgDiv.className = 'message error';
-        msgDiv.textContent = err.message;
-      }
-    }
-
-    // ---- Absences ----
-    document.getElementById('absWeekBtn').addEventListener('click', () => loadAbsences('week'));
-    document.getElementById('absMonthBtn').addEventListener('click', () => loadAbsences('month'));
-    async function loadAbsences(period) {
-      const msgDiv = document.getElementById('absencesMsg');
-      const tbody = document.querySelector('#absencesTable tbody');
-      try {
-        const data = await apiCall(`/api/attendance?type=absences&period=${period}`);
-        tbody.innerHTML = '';
-        if (data.length === 0) {
-          msgDiv.style.display = 'block';
-          msgDiv.className = 'message success';
-          msgDiv.textContent = 'Aucune absence sur cette période.';
-        } else {
-          msgDiv.style.display = 'none';
-          data.forEach(record => {
-            const row = tbody.insertRow();
-            row.innerHTML = `<td>${record.full_name}</td><td>${record.date}</td><td>${record.status}</td>`;
-          });
-        }
-      } catch (err) {
-        msgDiv.style.display = 'block';
-        msgDiv.className = 'message error';
-        msgDiv.textContent = err.message;
-      }
-    }
-
-    // ---- Présences du jour ----
-    async function loadTodayPresence() {
-      const date = document.getElementById('presenceDate').value || new Date().toISOString().slice(0,10);
-      const msgDiv = document.getElementById('presenceMsg');
-      const tbody = document.querySelector('#presenceTable tbody');
-      try {
-        const data = await apiCall(`/api/attendance?type=today&date=${date}`);
-        tbody.innerHTML = '';
-        data.forEach(student => {
-          const row = tbody.insertRow();
-          row.innerHTML = `
-            <td>${student.full_name}</td>
-            <td>${student.status || 'Non marqué'}</td>
-            <td>
-              <select class="statusSelect" data-student-id="${student.id}" data-date="${date}">
-                <option value="">--</option>
-                <option value="present" ${student.status === 'present' ? 'selected' : ''}>Présent</option>
-                <option value="absent" ${student.status === 'absent' ? 'selected' : ''}>Absent</option>
-                <option value="late" ${student.status === 'late' ? 'selected' : ''}>Retard</option>
-              </select>
-              <button class="saveStatusBtn" data-student-id="${student.id}" data-date="${date}">Enregistrer</button>
-            </td>`;
-        });
-        document.querySelectorAll('.saveStatusBtn').forEach(btn => {
-          btn.addEventListener('click', async () => {
-            const studentId = btn.dataset.studentId;
-            const date = btn.dataset.date;
-            const select = document.querySelector(`.statusSelect[data-student-id="${studentId}"]`);
-            const status = select.value;
-            if (!status) return;
-            try {
-              await apiCall('/api/attendance', 'POST', { student_id: studentId, date, status });
-              msgDiv.style.display = 'block';
-              msgDiv.className = 'message success';
-              msgDiv.textContent = 'Statut enregistré.';
-            } catch (err) {
-              msgDiv.style.display = 'block';
-              msgDiv.className = 'message error';
-              msgDiv.textContent = err.message;
-            }
-          });
-        });
-      } catch (err) {
-        msgDiv.style.display = 'block';
-        msgDiv.className = 'message error';
-        msgDiv.textContent = err.message;
-      }
-    }
-    document.getElementById('presenceDate').addEventListener('change', loadTodayPresence);
-    window.addEventListener('load', () => {
-      document.getElementById('presenceDate').value = new Date().toISOString().slice(0,10);
-    });
-
-    // ---- Enregistrement d'un écolage ----
-    async function loadStudentsForPayment() {
-      const select = document.getElementById('paymentStudent');
-      try {
-        const students = await apiCall('/api/students');
-        select.innerHTML = '<option value="">-- Choisir un élève --</option>';
-        students.forEach(s => {
-          select.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.matricule})</option>`;
-        });
-      } catch (err) {
-        select.innerHTML = '<option value="">Erreur chargement</option>';
-      }
-    }
-    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const student_id = document.getElementById('paymentStudent').value;
-      const month = document.getElementById('paymentMonth').value;
-      const amount = document.getElementById('paymentAmount').value || null;
-      const msgDiv = document.getElementById('paymentMsg');
-      if (!student_id || !month) {
-        msgDiv.style.display = 'block';
-        msgDiv.className = 'message error';
-        msgDiv.textContent = 'Veuillez sélectionner un élève et un mois.';
-        return;
-      }
-      try {
-        await apiCall('/api/payments', 'POST', { student_id, month, amount });
-        msgDiv.style.display = 'block';
-        msgDiv.className = 'message success';
-        msgDiv.textContent = 'Paiement enregistré avec succès !';
-        document.getElementById('paymentStudent').value = '';
-        document.getElementById('paymentAmount').value = '';
-        document.getElementById('paymentMonth').value = new Date().toISOString().slice(0,7);
-      } catch (err) {
-        msgDiv.style.display = 'block';
-        msgDiv.className = 'message error';
-        msgDiv.textContent = err.message;
-      }
-    });
-  </script>
-</body>
-</html>
+                

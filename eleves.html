@@ -3,117 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestion des élèves - Administration</title>
+  <title>Élèves</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
       min-height: 100vh;
-      padding: 24px 16px;
       display: flex;
       justify-content: center;
+      padding: 24px 16px;
       color: #1e293b;
     }
     .container {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1100px;
     }
 
-    /* En-tête */
-    .header {
+    /* En‑tête minimal */
+    .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
-    .header-left h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      letter-spacing: -0.5px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .header-left h1 span {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(10px);
-      padding: 8px 16px;
-      border-radius: 40px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #e2e8f0;
-    }
-    .btn-return {
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      color: #f1f5f9;
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 10px 20px;
+    .btn-back {
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 10px 16px;
       border-radius: 12px;
       font-weight: 500;
+      color: #475569;
       cursor: pointer;
-      transition: all 0.25s;
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       gap: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .btn-return:hover {
-      background: rgba(255,255,255,0.2);
-      border-color: rgba(255,255,255,0.4);
-    }
-
-    /* Carte principale */
-    .card {
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-      padding: 32px 28px;
-      overflow: hidden;
-    }
-
-    /* Barre d'actions */
-    .actions-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .actions-bar h2 {
-      font-size: 1.6rem;
-      font-weight: 600;
-      color: #0f172a;
+    .btn-back:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
     }
     .btn-add {
       background: #4f46e5;
       color: white;
       border: none;
-      padding: 14px 28px;
+      padding: 12px 24px;
       border-radius: 14px;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       transition: all 0.25s;
       display: flex;
       align-items: center;
-      gap: 10px;
-      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
     .btn-add:hover {
       background: #4338ca;
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(79, 70, 229, 0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
     }
 
-    /* Table */
+    /* Carte contenant le tableau */
+    .card {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      overflow: hidden;
+      padding: 0 0 24px 0;
+    }
     .table-wrapper {
       overflow-x: auto;
-      border-radius: 16px;
-      border: 1px solid #e2e8f0;
     }
     table {
       width: 100%;
@@ -124,79 +86,77 @@
       background: #f8fafc;
       font-weight: 600;
       color: #475569;
-      padding: 16px 20px;
-      font-size: 0.85rem;
+      padding: 16px 24px;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       text-align: left;
+      border-bottom: 1px solid #e2e8f0;
     }
     td {
-      padding: 16px 20px;
+      padding: 16px 24px;
       border-bottom: 1px solid #f1f5f9;
       color: #334155;
     }
     tbody tr {
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.15s;
     }
     tbody tr:hover {
-      background: #f1f5ff;
+      background: #f8fafc;
     }
-    .badge-level {
+    .badge {
       background: #e0e7ff;
       color: #4338ca;
       padding: 4px 12px;
       border-radius: 20px;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       display: inline-block;
     }
-
-    .empty-state {
+    .empty-row td {
       text-align: center;
       padding: 48px;
-      color: #64748b;
+      color: #94a3b8;
     }
 
-    /* Messages */
+    /* Message flash */
     .msg {
-      margin-top: 20px;
+      margin: 16px 24px 0 24px;
       padding: 12px 20px;
       border-radius: 12px;
       font-weight: 500;
     }
     .msg-success { background: #dcfce7; color: #166534; }
     .msg-error { background: #fee2e2; color: #991b1b; }
-    .msg-info { background: #dbeafe; color: #1e3a8a; }
 
     /* Modales */
     .modal {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
       z-index: 1000;
       justify-content: center;
       align-items: center;
       padding: 20px;
     }
     .modal.active { display: flex; }
-
     .modal-dialog {
       background: white;
       border-radius: 24px;
       padding: 32px;
       width: 100%;
-      max-width: 520px;
+      max-width: 500px;
       position: relative;
-      animation: slideUp 0.3s ease;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-      max-height: 90vh;
+      animation: slideUp 0.25s ease;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      max-height: 85vh;
       overflow-y: auto;
     }
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
+      from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .modal-close {
@@ -207,10 +167,9 @@
       border: none;
       color: #94a3b8;
       cursor: pointer;
-      transition: color 0.2s;
+      line-height: 1;
     }
     .modal-close:hover { color: #0f172a; }
-
     .form-group {
       margin-bottom: 20px;
     }
@@ -218,7 +177,7 @@
       display: block;
       font-weight: 600;
       color: #334155;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .form-group input,
     .form-group select {
@@ -233,7 +192,7 @@
     .form-group input:focus,
     .form-group select:focus {
       border-color: #4f46e5;
-      box-shadow: 0 0 0 4px rgba(79,70,229,0.1);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
     }
     .btn-primary {
       background: #4f46e5;
@@ -245,16 +204,15 @@
       font-size: 1rem;
       cursor: pointer;
       width: 100%;
-      transition: all 0.2s;
+      transition: 0.2s;
     }
     .btn-primary:hover {
       background: #4338ca;
     }
-
     .detail-actions {
       display: flex;
       gap: 12px;
-      margin: 24px 0 12px;
+      margin: 20px 0 10px;
       flex-wrap: wrap;
     }
     .btn-secondary {
@@ -265,45 +223,36 @@
       font-weight: 600;
       color: #334155;
       cursor: pointer;
-      transition: 0.2s;
       display: flex;
       align-items: center;
       gap: 8px;
+      transition: 0.2s;
     }
     .btn-secondary:hover {
       background: #e2e8f0;
-      border-color: #cbd5e1;
     }
     .qr-container {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 16px;
     }
     .qr-container img {
-      max-width: 200px;
+      max-width: 180px;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- En-tête -->
-    <div class="header">
-      <div class="header-left">
-        <h1>🎓 Gestion des élèves <span>Administration</span></h1>
-      </div>
-      <button class="btn-return" onclick="window.location.href='/dashboard.html'">
-        ⬅ Retour au tableau de bord
+    <!-- Barre supérieure : seulement le bouton retour et le bouton ajouter -->
+    <div class="top-bar">
+      <button class="btn-back" onclick="window.location.href='/dashboard.html'">
+        ← Retour
       </button>
+      <button class="btn-add" id="openAddModalBtn">+ Ajouter un élève</button>
     </div>
 
-    <!-- Carte -->
+    <!-- Carte du tableau -->
     <div class="card">
-      <div class="actions-bar">
-        <h2>Liste des élèves inscrits</h2>
-        <button class="btn-add" id="openAddModalBtn">➕ Ajouter un élève</button>
-      </div>
-
       <div class="table-wrapper">
         <table id="studentsTable">
           <thead>
@@ -353,7 +302,7 @@
             <option value="Terminale">Terminale</option>
           </select>
         </div>
-        <button type="submit" class="btn-primary">Enregistrer l'élève</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
       </form>
     </div>
   </div>
@@ -362,11 +311,11 @@
   <div id="detailModal" class="modal">
     <div class="modal-dialog">
       <button class="modal-close" id="closeDetailModal">&times;</button>
-      <h2 id="detailName" style="margin-bottom:8px;"></h2>
+      <h2 id="detailName" style="margin-bottom:4px;"></h2>
       <p style="color:#64748b; margin-bottom:20px;" id="detailInfo"></p>
       <div class="detail-actions">
         <button class="btn-secondary" id="showHistoryBtn">📋 Historique écolages</button>
-        <button class="btn-secondary" id="generateQRBtn">📱 Créer QR Code</button>
+        <button class="btn-secondary" id="generateQRBtn">📱 QR Code</button>
       </div>
       <div id="detailContent"></div>
     </div>
@@ -396,7 +345,7 @@
       return data;
     }
 
-    // Charger les élèves
+    // Charger la liste
     async function loadStudents() {
       const tbody = document.querySelector('#studentsTable tbody');
       const msgDiv = document.getElementById('studentsMsg');
@@ -406,19 +355,18 @@
         msgDiv.style.display = 'none';
 
         if (students.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Aucun élève enregistré pour le moment.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Aucun élève pour le moment.</td></tr>`;
           return;
         }
 
         students.forEach(s => {
           const row = document.createElement('tr');
-          const inscriptionDate = s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '-';
           row.innerHTML = `
             <td><strong>${s.matricule}</strong></td>
             <td>${s.last_name}</td>
             <td>${s.first_name}</td>
-            <td><span class="badge-level">${s.niveau || '-'}</span></td>
-            <td>${inscriptionDate}</td>
+            <td><span class="badge">${s.niveau || '-'}</span></td>
+            <td>${s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '-'}</td>
           `;
           row.addEventListener('click', () => openDetail(s));
           tbody.appendChild(row);
@@ -426,7 +374,7 @@
       } catch (err) {
         msgDiv.style.display = 'block';
         msgDiv.className = 'msg msg-error';
-        msgDiv.textContent = 'Erreur lors du chargement : ' + err.message;
+        msgDiv.textContent = 'Erreur : ' + err.message;
       }
     }
 
@@ -459,10 +407,9 @@
         addModal.classList.remove('active');
         msgDiv.style.display = 'block';
         msgDiv.className = 'msg msg-success';
-        msgDiv.textContent = 'Élève ajouté avec succès !';
+        msgDiv.textContent = 'Élève ajouté avec succès.';
         await loadStudents();
-        // Masquer le message après 4 secondes
-        setTimeout(() => { msgDiv.style.display = 'none'; }, 4000);
+        setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
       } catch (err) {
         msgDiv.style.display = 'block';
         msgDiv.className = 'msg msg-error';
@@ -492,10 +439,10 @@
       try {
         const history = await apiCall(`/api/student-payments?student_id=${currentStudent.id}`);
         if (history.length === 0) {
-          content.innerHTML = '<p style="color:#64748b;">Aucun paiement enregistré.</p>';
+          content.innerHTML = '<p style="color:#64748b;">Aucun paiement trouvé.</p>';
           return;
         }
-        let html = '<table style="width:100%;margin-top:16px;"><thead><tr><th>Mois</th><th>Montant</th><th>Payé le</th></tr></thead><tbody>';
+        let html = '<table style="width:100%;margin-top:12px;"><thead><tr><th>Mois</th><th>Montant</th><th>Payé le</th></tr></thead><tbody>';
         history.forEach(p => {
           html += `<tr>
             <td>${p.month}</td>
@@ -523,7 +470,7 @@
       content.innerHTML = `
         <div class="qr-container">
           <img src="${qrURL}" alt="QR Code élève">
-          <p style="margin-top:12px; color:#475569;">Scannez ce code pour voir l'identité</p>
+          <p style="margin-top:12px; color:#475569;">Scannez pour voir l'identité</p>
         </div>
       `;
     });

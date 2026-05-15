@@ -41,5 +41,37 @@ export default async function handler(req, res) {
     return res.status(201).json({ success: true, data });
   }
 
+  if (req.method === 'PUT') {
+    const { id, first_name, last_name, matricule, niveau } = req.body;
+    if (!id) return res.status(400).json({ message: 'ID requis' });
+    // Vérifier que le matricule n'est pas déjà utilisé par un autre élève
+    if (matricule) {
+      const { data: dup } = await supabase
+        .from('students')
+        .select('id')
+        .eq('matricule', matricule)
+        .neq('id', id)
+        .maybeSingle();
+      if (dup) return res.status(409).json({ message: 'Ce matricule est déjà utilisé' });
+    }
+    const { error } = await supabase
+      .from('students')
+      .update({ first_name, last_name, matricule, niveau })
+      .eq('id', id);
+    if (error) return res.status(500).json({ message: error.message });
+    return res.status(200).json({ success: true });
+  }
+
+  if (req.method === 'DELETE') {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ message: 'ID requis' });
+    const { error } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', id);
+    if (error) return res.status(500).json({ message: error.message });
+    return res.status(200).json({ success: true });
+  }
+
   return res.status(405).json({ message: 'Méthode non autorisée' });
 }

@@ -5,45 +5,587 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tableau de Bord - Administration</title>
   <style>
-    /* Tu pourras reprendre ici le style que nous avions créé */
-    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .dashboard-container {
+      width: 100%;
+      max-width: 900px;
+      margin-top: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .header h1 { font-size: 1.6rem; color: #1a202c; }
+    .logout-btn {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .logout-btn:hover { background: #c53030; }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .menu-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      font-weight: 600;
+      color: #2d3748;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .menu-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+      background: white;
+    }
+    .menu-card .icon { font-size: 2.2rem; }
+    .section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .section h2 { margin-bottom: 20px; color: #1a202c; }
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #4a5568; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    button[type="submit"], .payBtn, .saveStatusBtn, #loadUnpaidBtn, #absWeekBtn, #absMonthBtn, #openAddStudentModalBtn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button[type="submit"]:hover, .payBtn:hover, .saveStatusBtn:hover, #openAddStudentModalBtn:hover {
+      background: linear-gradient(135deg, #5a6fd1, #6b47a8);
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #f7fafc; font-weight: 600; }
+    .message { margin-top: 12px; padding: 10px; border-radius: 8px; }
+    .success { background: #c6f6d5; color: #22543d; }
+    .error { background: #fed7d7; color: #742a2a; }
+    select.statusSelect { padding: 6px; margin-right: 6px; }
+    /* Modale */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      width: 90%;
+      max-width: 450px;
+      position: relative;
+      animation: fadeInUp 0.3s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .close-modal {
+      position: absolute;
+      top: 12px; right: 18px;
+      font-size: 28px;
+      cursor: pointer;
+      color: #999;
+      transition: color 0.2s;
+    }
+    .close-modal:hover { color: #333; }
   </style>
 </head>
 <body>
-  <h1>Bienvenue sur le Tableau de Bord</h1>
-  <p>Si tu vois ce message, c'est que tu es bien connecté.</p>
-  <!-- C'est ici que nous ajouterons plus tard tes 4 boutons -->
+  <div class="dashboard-container">
+    <div class="header">
+      <h1>📋 Administration</h1>
+      <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+    </div>
+
+    <div class="menu-grid">
+      <div class="menu-card" data-section="students">
+        <span class="icon">🎓</span>
+        <span>Élèves</span>
+      </div>
+      <div class="menu-card" data-section="unpaid">
+        <span class="icon">💰</span>
+        <span>Écolages impayés</span>
+      </div>
+      <div class="menu-card" data-section="absences">
+        <span class="icon">📅</span>
+        <span>Absences</span>
+      </div>
+      <div class="menu-card" data-section="presence">
+        <span class="icon">✅</span>
+        <span>Présences du jour</span>
+      </div>
+      <div class="menu-card" data-section="register-payment">
+        <span class="icon">💵</span>
+        <span>Enregistrer écolage</span>
+      </div>
+    </div>
+
+    <!-- Section Élèves -->
+    <div id="students" class="section">
+      <h2>Liste des élèves</h2>
+      <button id="openAddStudentModalBtn" style="margin-bottom:16px;">➕ Ajouter un élève</button>
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th>Matricule</th>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Niveau</th>
+            <th>Date d'enregistrement</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="studentsMsg" class="message" style="display:none;"></div>
+    </div>
+
+    <!-- Section Impayés -->
+    <div id="unpaid" class="section">
+      <h2>Élèves n'ayant pas encore payé ce mois</h2>
+      <button id="loadUnpaidBtn" style="margin-bottom:16px;">🔄 Charger la liste</button>
+      <table id="unpaidTable">
+        <thead><tr><th>ID</th><th>Nom</th><th>Classe</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="unpaidMsg" class="message" style="display:none;"></div>
+    </div>
+
+    <!-- Section Absences -->
+    <div id="absences" class="section">
+      <h2>Absences</h2>
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <button id="absWeekBtn">Cette semaine</button>
+        <button id="absMonthBtn">Ce mois</button>
+      </div>
+      <table id="absencesTable">
+        <thead><tr><th>Élève</th><th>Date</th><th>Statut</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="absencesMsg" class="message" style="display:none;"></div>
+    </div>
+
+    <!-- Section Présences du jour -->
+    <div id="presence" class="section">
+      <h2>Présences du jour</h2>
+      <div style="margin-bottom:20px;">
+        <label>Date : <input type="date" id="presenceDate"></label>
+      </div>
+      <table id="presenceTable">
+        <thead><tr><th>Élève</th><th>Statut</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="presenceMsg" class="message" style="display:none;"></div>
+    </div>
+
+    <!-- Section Enregistrer un écolage -->
+    <div id="register-payment" class="section">
+      <h2>Enregistrer un paiement d'écolage</h2>
+      <form id="paymentForm">
+        <div class="form-group">
+          <label for="paymentStudent">Élève</label>
+          <select id="paymentStudent" required>
+            <option value="">-- Choisir un élève --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="paymentMonth">Mois concerné</label>
+          <input type="month" id="paymentMonth" required>
+        </div>
+        <div class="form-group">
+          <label for="paymentAmount">Montant (optionnel)</label>
+          <input type="number" id="paymentAmount" placeholder="Ex: 50000 Ar" min="0" step="any">
+        </div>
+        <button type="submit">✅ Valider le paiement</button>
+      </form>
+      <div id="paymentMsg" class="message" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Modale d'ajout d'élève -->
+  <div id="studentModal" class="modal-overlay">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Nouvel élève</h2>
+      <form id="addStudentForm">
+        <div class="form-group">
+          <label for="firstName">Prénom</label>
+          <input type="text" id="firstName" required>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Nom</label>
+          <input type="text" id="lastName" required>
+        </div>
+        <div class="form-group">
+          <label for="matricule">Matricule</label>
+          <input type="text" id="matricule" required>
+        </div>
+        <div class="form-group">
+          <label for="niveau">Niveau</label>
+          <select id="niveau" required>
+            <option value="">-- Choisir --</option>
+            <option value="6ème">6ème</option>
+            <option value="5ème">5ème</option>
+            <option value="4ème">4ème</option>
+            <option value="3ème">3ème</option>
+            <option value="2nde">2nde</option>
+            <option value="1ère">1ère</option>
+            <option value="Terminale">Terminale</option>
+          </select>
+        </div>
+        <button type="submit">Enregistrer</button>
+      </form>
+    </div>
+  </div>
 
   <script>
-    // Vérification immédiate de l'authentification
-    async function checkAuth() {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        // Pas de jeton trouvé, redirection vers la connexion
-        window.location.href = '/index.html';
+    const token = localStorage.getItem('adminToken');
+    if (!token) window.location.href = '/index.html';
+
+    async function apiCall(url, method = 'GET', body = null) {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('adminToken');
+          window.location.href = '/index.html';
+        }
+        throw new Error(data.message || 'Erreur');
+      }
+      return data;
+    }
+
+    // Gestion des sections
+    document.querySelectorAll('.menu-card').forEach(card => {
+      card.addEventListener('click', async () => {
+        const sectionId = card.dataset.section;
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+
+        if (sectionId === 'students') loadStudents();
+        if (sectionId === 'presence') loadTodayPresence();
+        if (sectionId === 'register-payment') {
+          document.getElementById('paymentMonth').value = new Date().toISOString().slice(0,7);
+          await loadStudentsForPayment();
+        }
+      });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('adminToken');
+      window.location.href = '/index.html';
+    });
+
+    // ---- Section Élèves ----
+    async function loadStudents() {
+      const tbody = document.querySelector('#studentsTable tbody');
+      const msgDiv = document.getElementById('studentsMsg');
+      try {
+        const students = await apiCall('/api/students');
+        tbody.innerHTML = '';
+        if (students.length === 0) {
+          msgDiv.style.display = 'block';
+          msgDiv.className = 'message info';
+          msgDiv.textContent = 'Aucun élève enregistré.';
+        } else {
+          msgDiv.style.display = 'none';
+          students.forEach(s => {
+            const row = tbody.insertRow();
+            const date = s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '-';
+            row.innerHTML = `
+              <td>${s.matricule}</td>
+              <td>${s.last_name}</td>
+              <td>${s.first_name}</td>
+              <td>${s.niveau || '-'}</td>
+              <td>${date}</td>
+            `;
+          });
+        }
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
+      }
+    }
+
+    // Modale
+    const modal = document.getElementById('studentModal');
+    const openModalBtn = document.getElementById('openAddStudentModalBtn');
+    const closeModalBtn = document.querySelector('.close-modal');
+
+    openModalBtn.addEventListener('click', () => {
+      modal.classList.add('active');
+      document.getElementById('studentsMsg').style.display = 'none';
+    });
+
+    closeModalBtn.addEventListener('click', () => modal.classList.remove('active'));
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.remove('active');
+    });
+
+    document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const first_name = document.getElementById('firstName').value.trim();
+      const last_name = document.getElementById('lastName').value.trim();
+      const matricule = document.getElementById('matricule').value.trim();
+      const niveau = document.getElementById('niveau').value;
+      const msgDiv = document.getElementById('studentsMsg');
+
+      if (!first_name || !last_name || !matricule || !niveau) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = 'Tous les champs sont obligatoires.';
         return;
       }
 
       try {
-        const res = await fetch('/api/check-auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token })
-        });
-        const data = await res.json();
-        
-        if (!res.ok || !data.success) {
-          // Le jeton est invalide, on le supprime et on redirige
-          localStorage.removeItem('adminToken');
-          window.location.href = '/index.html';
+        await apiCall('/api/students', 'POST', { first_name, last_name, matricule, niveau });
+        // Réinitialiser et fermer la modale
+        document.getElementById('addStudentForm').reset();
+        modal.classList.remove('active');
+        // Afficher message de succès et recharger la liste
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message success';
+        msgDiv.textContent = 'Élève ajouté avec succès !';
+        await loadStudents();
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
+      }
+    });
+
+    // ---- Impayés ----
+    document.getElementById('loadUnpaidBtn').addEventListener('click', loadUnpaid);
+    async function loadUnpaid() {
+      const msgDiv = document.getElementById('unpaidMsg');
+      const tbody = document.querySelector('#unpaidTable tbody');
+      try {
+        const data = await apiCall('/api/payments?status=unpaid');
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+          msgDiv.style.display = 'block';
+          msgDiv.className = 'message success';
+          msgDiv.textContent = '✅ Tous les élèves ont payé ce mois.';
+        } else {
+          msgDiv.style.display = 'none';
+          data.forEach(student => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+              <td>${student.id}</td>
+              <td>${student.last_name} ${student.first_name}</td>
+              <td>${student.niveau || ''}</td>
+              <td><button class="payBtn" data-student-id="${student.id}">💰 Marquer payé</button></td>
+            `;
+          });
+          document.querySelectorAll('.payBtn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const studentId = e.target.dataset.studentId;
+              try {
+                const currentMonth = new Date().toISOString().slice(0,7);
+                await apiCall('/api/payments', 'POST', { student_id: studentId, month: currentMonth });
+                loadUnpaid();
+              } catch (err) {
+                alert('Erreur : ' + err.message);
+              }
+            });
+          });
         }
-      } catch (error) {
-        window.location.href = '/index.html';
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
       }
     }
 
-    // On lance la vérification dès que la page est chargée
-    checkAuth();
+    // ---- Absences ----
+    document.getElementById('absWeekBtn').addEventListener('click', () => loadAbsences('week'));
+    document.getElementById('absMonthBtn').addEventListener('click', () => loadAbsences('month'));
+    async function loadAbsences(period) {
+      const msgDiv = document.getElementById('absencesMsg');
+      const tbody = document.querySelector('#absencesTable tbody');
+      try {
+        const data = await apiCall(`/api/attendance?type=absences&period=${period}`);
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+          msgDiv.style.display = 'block';
+          msgDiv.className = 'message success';
+          msgDiv.textContent = 'Aucune absence sur cette période.';
+        } else {
+          msgDiv.style.display = 'none';
+          data.forEach(record => {
+            const row = tbody.insertRow();
+            row.innerHTML = `<td>${record.full_name}</td><td>${record.date}</td><td>${record.status}</td>`;
+          });
+        }
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
+      }
+    }
+
+    // ---- Présences du jour ----
+    async function loadTodayPresence() {
+      const date = document.getElementById('presenceDate').value || new Date().toISOString().slice(0,10);
+      const msgDiv = document.getElementById('presenceMsg');
+      const tbody = document.querySelector('#presenceTable tbody');
+      try {
+        const data = await apiCall(`/api/attendance?type=today&date=${date}`);
+        tbody.innerHTML = '';
+        data.forEach(student => {
+          const row = tbody.insertRow();
+          row.innerHTML = `
+            <td>${student.full_name}</td>
+            <td>${student.status || 'Non marqué'}</td>
+            <td>
+              <select class="statusSelect" data-student-id="${student.id}" data-date="${date}">
+                <option value="">--</option>
+                <option value="present" ${student.status === 'present' ? 'selected' : ''}>Présent</option>
+                <option value="absent" ${student.status === 'absent' ? 'selected' : ''}>Absent</option>
+                <option value="late" ${student.status === 'late' ? 'selected' : ''}>Retard</option>
+              </select>
+              <button class="saveStatusBtn" data-student-id="${student.id}" data-date="${date}">Enregistrer</button>
+            </td>`;
+        });
+        document.querySelectorAll('.saveStatusBtn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const studentId = btn.dataset.studentId;
+            const date = btn.dataset.date;
+            const select = document.querySelector(`.statusSelect[data-student-id="${studentId}"]`);
+            const status = select.value;
+            if (!status) return;
+            try {
+              await apiCall('/api/attendance', 'POST', { student_id: studentId, date, status });
+              msgDiv.style.display = 'block';
+              msgDiv.className = 'message success';
+              msgDiv.textContent = 'Statut enregistré.';
+            } catch (err) {
+              msgDiv.style.display = 'block';
+              msgDiv.className = 'message error';
+              msgDiv.textContent = err.message;
+            }
+          });
+        });
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
+      }
+    }
+    document.getElementById('presenceDate').addEventListener('change', loadTodayPresence);
+    window.addEventListener('load', () => {
+      document.getElementById('presenceDate').value = new Date().toISOString().slice(0,10);
+    });
+
+    // ---- Enregistrement d'un écolage ----
+    async function loadStudentsForPayment() {
+      const select = document.getElementById('paymentStudent');
+      try {
+        const students = await apiCall('/api/students');
+        select.innerHTML = '<option value="">-- Choisir un élève --</option>';
+        students.forEach(s => {
+          select.innerHTML += `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.matricule})</option>`;
+        });
+      } catch (err) {
+        select.innerHTML = '<option value="">Erreur chargement</option>';
+      }
+    }
+    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const student_id = document.getElementById('paymentStudent').value;
+      const month = document.getElementById('paymentMonth').value;
+      const amount = document.getElementById('paymentAmount').value || null;
+      const msgDiv = document.getElementById('paymentMsg');
+      if (!student_id || !month) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = 'Veuillez sélectionner un élève et un mois.';
+        return;
+      }
+      try {
+        await apiCall('/api/payments', 'POST', { student_id, month, amount });
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message success';
+        msgDiv.textContent = 'Paiement enregistré avec succès !';
+        document.getElementById('paymentStudent').value = '';
+        document.getElementById('paymentAmount').value = '';
+        document.getElementById('paymentMonth').value = new Date().toISOString().slice(0,7);
+      } catch (err) {
+        msgDiv.style.display = 'block';
+        msgDiv.className = 'message error';
+        msgDiv.textContent = err.message;
+      }
+    });
   </script>
 </body>
 </html>

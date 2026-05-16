@@ -34,8 +34,21 @@
     .btn-add:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4); }
     .card {
       background: white; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-      overflow: hidden; padding: 0 0 24px 0;
+      overflow: hidden; padding: 24px;
     }
+    .search-bar {
+      display: flex; gap: 12px; align-items: center; margin-bottom: 20px;
+    }
+    .search-bar input {
+      flex: 1; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px;
+      font-size: 0.95rem; outline: none; transition: 0.2s;
+    }
+    .search-bar input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+    .btn-search {
+      background: #4f46e5; color: white; border: none; padding: 12px 20px;
+      border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-search:hover { background: #4338ca; }
     .table-wrapper { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; white-space: nowrap; }
     th {
@@ -51,7 +64,7 @@
       font-weight: 600; font-size: 0.8rem; display: inline-block;
     }
     .empty-row td { text-align: center; padding: 48px; color: #94a3b8; }
-    .msg { margin: 16px 24px 0 24px; padding: 12px 20px; border-radius: 12px; font-weight: 500; }
+    .msg { margin-top: 16px; padding: 12px 20px; border-radius: 12px; font-weight: 500; }
     .msg-success { background: #dcfce7; color: #166534; }
     .msg-error { background: #fee2e2; color: #991b1b; }
 
@@ -122,6 +135,12 @@
     </div>
 
     <div class="card">
+      <!-- Barre de recherche par matricule -->
+      <div class="search-bar">
+        <input type="text" id="searchMatricule" placeholder="Rechercher par matricule..." autocomplete="off">
+        <button class="btn-search" id="searchBtn">🔍 Rechercher</button>
+      </div>
+
       <div class="table-wrapper">
         <table id="studentsTable">
           <thead>
@@ -178,6 +197,7 @@
     if (!token) window.location.href = '/index.html';
 
     let currentQRURL = null;
+    let allStudents = []; // Stocke tous les élèves chargés
 
     async function apiCall(url, method = 'GET', body = null) {
       const res = await fetch(url, {
@@ -199,39 +219,69 @@
       return data;
     }
 
-    // Charger la liste
-    async function loadStudents() {
+    // Remplit le tableau avec les élèves filtrés (ou tous)
+    function renderTable(students) {
       const tbody = document.querySelector('#studentsTable tbody');
       const msgDiv = document.getElementById('studentsMsg');
+      tbody.innerHTML = '';
+      msgDiv.style.display = 'none';
+
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Aucun élève trouvé.</td></tr>`;
+        return;
+      }
+
+      students.forEach(s => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${s.matricule}</strong></td>
+          <td>${s.last_name}</td>
+          <td>${s.first_name}</td>
+          <td><span class="badge">${s.niveau || '-'}</span></td>
+          <td>${s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '-'}</td>
+        `;
+        row.addEventListener('click', () => openDetail(s));
+        tbody.appendChild(row);
+      });
+    }
+
+    // Charge tous les élèves et les stocke
+    async function loadStudents() {
+      const msgDiv = document.getElementById('studentsMsg');
       try {
-        const students = await apiCall('/api/students');
-        tbody.innerHTML = '';
-        msgDiv.style.display = 'none';
-        if (students.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Aucun élève pour le moment.</td></tr>`;
-          return;
-        }
-        students.forEach(s => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td><strong>${s.matricule}</strong></td>
-            <td>${s.last_name}</td>
-            <td>${s.first_name}</td>
-            <td><span class="badge">${s.niveau || '-'}</span></td>
-            <td>${s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '-'}</td>
-          `;
-          row.addEventListener('click', () => openDetail(s));
-          tbody.appendChild(row);
-        });
+        allStudents = await apiCall('/api/students');
+        // Effacer le champ de recherche
+        document.getElementById('searchMatricule').value = '';
+        renderTable(allStudents);
       } catch (err) {
         msgDiv.style.display = 'block';
         msgDiv.className = 'msg msg-error';
         msgDiv.textContent = 'Erreur : ' + err.message;
       }
     }
+
+    // Filtre les élèves selon le matricule
+    function filterStudents() {
+      const query = document.getElementById('searchMatricule').value.trim().toLowerCase();
+      if (query === '') {
+        renderTable(allStudents);
+        return;
+      }
+      const filtered = allStudents.filter(s => s.matricule.toLowerCase().includes(query));
+      renderTable(filtered);
+    }
+
+    // Écouteurs de recherche
+    document.getElementById('searchBtn').addEventListener('click', filterStudents);
+    document.getElementById('searchMatricule').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') filterStudents();
+      // Pour une recherche en temps réel, décommentez la ligne ci-dessous :
+      // filterStudents();
+    });
+
     loadStudents();
 
-    // Modale Ajout
+    // Modale Ajout (inchangée)
     const addModal = document.getElementById('addModal');
     document.getElementById('openAddModalBtn').addEventListener('click', () => addModal.classList.add('active'));
     document.getElementById('closeAddModal').addEventListener('click', () => addModal.classList.remove('active'));
@@ -262,7 +312,7 @@
       }
     });
 
-    // Modale Détail
+    // Modale Détail (inchangée)
     const detailModal = document.getElementById('detailModal');
     let currentStudent = null;
 
@@ -277,7 +327,6 @@
     document.getElementById('closeDetailModal').addEventListener('click', () => detailModal.classList.remove('active'));
     window.addEventListener('click', (e) => { if (e.target === detailModal) detailModal.classList.remove('active'); });
 
-    // Historique
     document.getElementById('showHistoryBtn').addEventListener('click', async () => {
       if (!currentStudent) return;
       const content = document.getElementById('detailContent');
@@ -299,7 +348,6 @@
       }
     });
 
-    // QR Code + Imprimer
     document.getElementById('generateQRBtn').addEventListener('click', () => {
       if (!currentStudent) return;
       const content = document.getElementById('detailContent');
@@ -320,7 +368,6 @@
       `;
     });
 
-    // Fonction d'impression (export avec QR)
     window.printStudentInfo = function() {
       if (!currentStudent) return;
       const qrImage = currentQRURL ? `<img src="${currentQRURL}" style="max-width:200px; margin:20px 0;" />` : '';
@@ -356,7 +403,6 @@
       printWindow.print();
     };
 
-    // Modifier
     document.getElementById('editStudentBtn').addEventListener('click', async () => {
       if (!currentStudent) return;
       const newFirst = prompt('Nouveau prénom :', currentStudent.first_name);
@@ -382,7 +428,6 @@
       }
     });
 
-    // Supprimer
     document.getElementById('deleteStudentBtn').addEventListener('click', async () => {
       if (!currentStudent) return;
       if (!confirm(`Supprimer définitivement ${currentStudent.first_name} ${currentStudent.last_name} ?`)) return;

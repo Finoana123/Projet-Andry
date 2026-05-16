@@ -37,18 +37,13 @@
       overflow: hidden; padding: 24px;
     }
     .search-bar {
-      display: flex; gap: 12px; align-items: center; margin-bottom: 20px;
+      margin-bottom: 20px;
     }
     .search-bar input {
-      flex: 1; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px;
+      width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px;
       font-size: 0.95rem; outline: none; transition: 0.2s;
     }
     .search-bar input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-    .btn-search {
-      background: #4f46e5; color: white; border: none; padding: 12px 20px;
-      border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
-    }
-    .btn-search:hover { background: #4338ca; }
     .table-wrapper { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; white-space: nowrap; }
     th {
@@ -135,10 +130,9 @@
     </div>
 
     <div class="card">
-      <!-- Barre de recherche par matricule -->
+      <!-- Barre de recherche automatique par matricule -->
       <div class="search-bar">
         <input type="text" id="searchMatricule" placeholder="Rechercher par matricule..." autocomplete="off">
-        <button class="btn-search" id="searchBtn">🔍 Rechercher</button>
       </div>
 
       <div class="table-wrapper">
@@ -197,7 +191,7 @@
     if (!token) window.location.href = '/index.html';
 
     let currentQRURL = null;
-    let allStudents = []; // Stocke tous les élèves chargés
+    let allStudents = [];
 
     async function apiCall(url, method = 'GET', body = null) {
       const res = await fetch(url, {
@@ -219,7 +213,6 @@
       return data;
     }
 
-    // Remplit le tableau avec les élèves filtrés (ou tous)
     function renderTable(students) {
       const tbody = document.querySelector('#studentsTable tbody');
       const msgDiv = document.getElementById('studentsMsg');
@@ -245,12 +238,10 @@
       });
     }
 
-    // Charge tous les élèves et les stocke
     async function loadStudents() {
       const msgDiv = document.getElementById('studentsMsg');
       try {
         allStudents = await apiCall('/api/students');
-        // Effacer le champ de recherche
         document.getElementById('searchMatricule').value = '';
         renderTable(allStudents);
       } catch (err) {
@@ -260,23 +251,15 @@
       }
     }
 
-    // Filtre les élèves selon le matricule
-    function filterStudents() {
-      const query = document.getElementById('searchMatricule').value.trim().toLowerCase();
+    // Recherche automatique à la frappe
+    document.getElementById('searchMatricule').addEventListener('input', function() {
+      const query = this.value.trim().toLowerCase();
       if (query === '') {
         renderTable(allStudents);
-        return;
+      } else {
+        const filtered = allStudents.filter(s => s.matricule.toLowerCase().includes(query));
+        renderTable(filtered);
       }
-      const filtered = allStudents.filter(s => s.matricule.toLowerCase().includes(query));
-      renderTable(filtered);
-    }
-
-    // Écouteurs de recherche
-    document.getElementById('searchBtn').addEventListener('click', filterStudents);
-    document.getElementById('searchMatricule').addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') filterStudents();
-      // Pour une recherche en temps réel, décommentez la ligne ci-dessous :
-      // filterStudents();
     });
 
     loadStudents();
